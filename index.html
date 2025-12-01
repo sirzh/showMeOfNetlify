@@ -2,10 +2,406 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>欢迎来到我的世界</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>弹窗生成器</title>
+    <style>
+        /* 基础样式 */
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            min-height: 100vh;
+            color: white;
+            text-align: center;
+            overflow: hidden;
+        }
+        
+        /* 弹窗基础样式 */
+        .modal {
+            position: fixed;
+            background: linear-gradient(135deg, #fff9e6 0%, #ffe6f0 100%);
+            padding: 15px;
+            border-radius: 12px;
+            color: #333;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            opacity: 0;
+            animation: fadeInScale 0.5s forwards;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        /* 弹窗悬停效果 */
+        .modal:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+        }
+        
+        /* 弹窗点击效果 */
+        .modal:active {
+            transform: translateY(0) scale(0.95);
+        }
+        
+        /* 弹窗动画 */
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        /* 弹窗淡出动画 */
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+                transform: scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+        }
+        
+        /* 弹窗段落样式 */
+        .modal p {
+            margin: 0;
+            color: #5a5a5a;
+            line-height: 1.4;
+            font-weight: 500;
+        }
+        
+        /* PC端样式 - 屏幕宽度大于768px */
+        @media screen and (min-width: 769px) {
+            .modal {
+                width: 250px;
+                font-size: 1rem;
+                padding: 20px;
+                border-radius: 15px;
+            }
+            
+            .modal p {
+                font-size: 1rem;
+            }
+        }
+        
+        /* 平板端样式 - 屏幕宽度在481px到768px之间 */
+        @media screen and (max-width: 768px) and (min-width: 481px) {
+            .modal {
+                width: 220px;
+                font-size: 0.95rem;
+                padding: 18px;
+                border-radius: 14px;
+            }
+            
+            .modal p {
+                font-size: 0.95rem;
+            }
+        }
+        
+        /* 手机端样式 - 屏幕宽度小于等于480px */
+        @media screen and (max-width: 480px) {
+            .modal {
+                width: 180px;
+                font-size: 0.85rem;
+                padding: 12px;
+                border-radius: 10px;
+            }
+            
+            .modal p {
+                font-size: 0.85rem;
+            }
+        }
+        
+        /* 超小屏幕手机样式 - 屏幕宽度小于等于360px */
+        @media screen and (max-width: 360px) {
+            .modal {
+                width: 160px;
+                font-size: 0.8rem;
+                padding: 10px;
+                border-radius: 8px;
+            }
+            
+            .modal p {
+                font-size: 0.8rem;
+            }
+        }
+        
+        /* 横屏模式适配 */
+        @media screen and (orientation: landscape) and (max-height: 500px) {
+            .modal {
+                width: 150px;
+                font-size: 0.8rem;
+                padding: 8px;
+            }
+            
+            .modal p {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
 </head>
 <body>
-<h1>我是小驴，我就不好</h1>
+
+    <script>
+        // 变量声明部分
+        let modalCount = 0;
+        let generationInterval;
+        let isGenerating = false;
+        
+        // 页面加载完成后自动开始生成弹窗
+        window.onload = function() {
+            startGenerating();
+        };
+        
+        /**
+         * 开始生成弹窗
+         * 设置定时器，根据设备类型调整生成速度
+         */
+        function startGenerating() {
+            if (isGenerating) return;
+            
+            isGenerating = true;
+            
+            // 根据屏幕宽度调整弹窗生成速度
+            let intervalTime = 100;
+            
+            if (window.innerWidth <= 768) {
+                intervalTime = 150;
+            }
+            
+            if (window.innerWidth <= 480) {
+                intervalTime = 180;
+            }
+            
+            // 设置定时器，根据设备类型调整生成间隔
+            generationInterval = setInterval(createRandomModal, intervalTime);
+            
+            // 延迟后立即生成第一个弹窗
+            setTimeout(createRandomModal, 500);
+        }
+        
+        /**
+         * 获取当前设备的弹窗尺寸
+         * 返回一个包含宽度和高度的对象
+         */
+        function getModalDimensions() {
+            let modalWidth = 250;
+            let modalHeight = 150;
+            
+            // 根据屏幕宽度调整弹窗尺寸
+            if (window.innerWidth <= 768) {
+                modalWidth = 220;
+                modalHeight = 130;
+            }
+            
+            if (window.innerWidth <= 480) {
+                modalWidth = 180;
+                modalHeight = 100;
+            }
+            
+            if (window.innerWidth <= 360) {
+                modalWidth = 160;
+                modalHeight = 90;
+            }
+            
+            // 横屏模式特殊处理
+            if (window.orientation && Math.abs(window.orientation) === 90 && window.innerHeight <= 500) {
+                modalWidth = 150;
+                modalHeight = 80;
+            }
+            
+            return {
+                width: modalWidth,
+                height: modalHeight
+            };
+        }
+        
+        /**
+         * 创建随机位置弹窗
+         * 自适应不同设备屏幕
+         */
+        function createRandomModal() {
+            // 获取当前设备的弹窗尺寸
+            const dimensions = getModalDimensions();
+            const modalWidth = dimensions.width;
+            const modalHeight = dimensions.height;
+            
+            // 创建弹窗元素
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modalCount++;
+            
+            // 随机弹窗内容数组
+            const messages = [
+                "你已经做得很好了！",
+                "我在乎你的感受。",
+                "你的存在本身就有价值。",
+                "我为你感到骄傲！",
+                "没关系，累了就休息。",
+                "你可以依赖我。",
+                "你的感受是合理的。",
+                "不必完美，你本已足够。",
+                "我理解你为什么这么想。",
+                "你对我很重要。",
+                "这不是你的错。",
+                "我看见你背后的努力了。",
+                "你能走到这里，已经很了不起。",
+                "我喜欢的，就是真实的你。",
+                "你的想法很有意义。",
+                "在我这里，你永远有位置。",
+                "我接受你的全部。",
+                "你值得被温柔以待。",
+                "你的快乐对我很重要。",
+                "我永远站在你这边。",
+                "我在这里陪着你。",
+                "难过的话，就哭出来吧。",
+                "这不是你一个人的战斗。",
+                "黑暗不会一直持续，我陪你等到天亮。",
+                "辛苦你了。",
+                "我们一起想办法。",
+                "慢慢来，不着急。",
+                "你想说的时候，我随时在听。",
+                "我会记得你的一切喜好。",
+                "你让我的世界变得更好了。",
+                "回忆起你，总是让我感到温暖。",
+                "你的 peace 就是我的 peace。",
+                "无论发生什么，我们的关系不会变。",
+                "我懂那种感受。",
+                "你不是负担。",
+                "我会一直记得今天，记得你此刻的笑容。",
+                "和你在一起时，时间过得特别快。",
+                "你的安心，就是我的安心。",
+                "我珍惜和你在一起的每一刻。",
+                "你的笑容有治愈的力量。",
+                "我相信你的选择。",
+                "你有勇气重新开始。",
+                "你的韧性超乎你想象。",
+                "一步一步来，你可以的。",
+                "我看到了你眼里的光。",
+                "你的潜力是无限的。",
+                "这次没成功，但你收获了经验。",
+                "跟随你的内心，我支持你。",
+                "你比自己认为的更强大。",
+                "你的独特就是你的力量。",
+                "别怕，去尝试。",
+                "你正在成为更好的自己。",
+                "你的坚持，终将美好。",
+                "你完全有能力处理它。",
+                "你 inspire 了我。",
+                "你的行动力一直让我佩服。",
+                "你配得上所有美好。",
+                "你为梦想努力的样子，真好看。",
+                "你的决心让我相信一切可能。",
+                "你有改变一切的能力。",
+                "谢谢你出现在我的生命里。",
+                "有你真好。",
+                "和你分享快乐，快乐会加倍。",
+                "我常常觉得，遇见你是我的幸运。",
+                "谢谢你懂我。",
+                "你让我想成为一个更好的人。",
+                "我的世界因为有你而不同。",
+                "谢谢你让我做我自己。",
+                "能帮到你，我感到很高兴。",
+                "你总是能带给我新的启发。",
+                "谢谢你倾听我。",
+                "你给予我的，比你知道的更多。",
+                "和你在一起的时光，我都珍藏心底。",
+                "你让我感到被深深理解。",
+                "你的善良让这个世界更柔软。",
+                "感谢你毫无保留的信任。",
+                "你是我想要分享所有 first time 的人。",
+                "你让我看到了生活的另一种可能。",
+                "能成为你故事的一部分，我很荣幸。",
+                "你本身就是一份礼物。",
+                "今天天气很好，就像你的心情该有的样子。",
+                "一切都会好起来的。",
+                "你今天看起来很棒。",
+                "别忘了，你也被很多人爱着。",
+                "我永远是你的退路。",
+                "你想去的地方，我陪你抵达。",
+                "你让平凡的日子发光。",
+                "明天会有新的好消息。",
+                "你值得所有的幸福。",
+                "宇宙正在为你安排更好的事情。",
+                "你是我平淡生活里的惊喜。",
+                "光是你的存在，就让我对未来充满期待。",
+                "你是我想到就会心安的存在。",
+                "你为我的生活增添了色彩。",
+                "你今天过得怎么样？我想知道。",
+                "无论你在哪里，都有我的祝福。",
+                "你让‘家’这个字有了温度。",
+                "我永远对你抱有温柔的期待。",
+                "你是我愿意反复爱上的人间。",
+                "我们的故事，未完待续。"
+            ];
+            
+            // 随机选择一条消息
+            const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+            
+            // 设置弹窗内容
+            modal.innerHTML = `<p>${randomMessage}</p>`;
+           
+            // 使用视口宽度和高度，减去弹窗宽度和高度
+            const maxWidth = Math.max(window.innerWidth - modalWidth, 10);
+            const maxHeight = Math.max(window.innerHeight - modalHeight, 10);
+            
+            // 生成随机坐标
+            const randomLeft = Math.floor(Math.random() * maxWidth);
+            const randomTop = Math.floor(Math.random() * maxHeight);
+            
+            // 设置弹窗位置和尺寸
+            modal.style.left = randomLeft + 'px';
+            modal.style.top = randomTop + 'px';
+            modal.style.width = modalWidth + 'px';
+            modal.style.minHeight = modalHeight + 'px';
+            
+            // 为弹窗添加点击事件，点击后淡出并移除
+            modal.addEventListener('click', function() {
+                // 先播放淡出动画
+                modal.style.animation = 'fadeOut 0.3s forwards';
+                
+                // 动画结束后移除弹窗元素
+                setTimeout(() => {
+                    modal.remove();
+                    modalCount--;
+                }, 300); // 与动画时间保持一致
+            });
+            
+            // 将弹窗添加到页面
+            document.body.appendChild(modal);
+            
+            /**
+             * 弹窗数量控制
+             * 根据设备性能调整最大弹窗数量
+             */
+            let maxModals = 100;
+            if (window.innerWidth <= 768) {
+                maxModals = 50;
+            }
+            if (window.innerWidth <= 480) {
+                maxModals = 30;
+            }
+            if (modalCount > maxModals) {
+                const firstModal = document.querySelector('.modal');
+                if (firstModal) {
+                    firstModal.remove();
+                    modalCount--;
+                }
+            }
+        }
+    </script>
 </body>
 </html>
